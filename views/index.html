@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>News App Demo</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="https://unpkg.com/infinite-scroll@3/dist/infinite-scroll.pkgd.min.js"></script>
+</head>
+<body>
+  <h1>News App Demo</h1>
+</body>
+<main>
+  <header>
+    <a class="logo" href="/">News Demo</a>
+    <form action="/search" method="GET">
+      <input autofocus class="search-input" value="{{.SearchKey}}"
+      placeholder="Enter a news topic" type="search" name="q">
+    </form>
+    <a href="https://github.com/freshman-tech/news" class="button
+      github-button">View on Github</a>
+  </header>
+</main>
+<section class="container">
+  <div class="result-count">
+    {{ if (gt .Results.TotalResults 0)}}
+      <p>About <strong>{{ .Results.TotalResults }}</strong> results were found.</p>
+    {{ else if (ne .SearchKey "") and (eq .Results.TotalResults 0) }}
+      <p>No results found for your query: <strong>{{ .SearchKey }}</strong>.</p>
+    {{ end }}
+  </div>
+  <ul class="search-results">
+    {{ range .Results.Articles }}
+      <li class="news-article">
+        <div>
+          <a target="_blank" rel="noreferrer noopener" href="{{.URL}}">
+            <h3 class="title">{{.Title }}</h3>
+          </a>
+          <p class="description">{{ .Description }}</p>
+          <div class="metadata">
+            <p class="source">{{ .Source.Name }}</p>
+            <time class="published-date">{{ .FormatPublishDate }}</time>
+          </div>
+        </div>
+        <img class="article-image" src="{{ .URLToImage }}">
+      </li>
+    {{ end }}
+  </ul>
+</section>
+<div class="pagination">
+  {{ if (gt .NextPage 2) }}
+    <a class="pagination__next" href="/search?q={{ .SearchKey }}&page={{ .PreviousPage }}">Previous</a>
+  {{ end }}
+  {{ if (ne .IsLastPage true) }}
+    <a class="pagination__next" href="/search?q={{ .SearchKey }}&page={{ .NextPage }}">Next</a>
+  {{ end }}
+</div>
+<script>
+  let infScroll = new InfiniteScroll(".container", {
+    path: ".pagination__next",
+    append: ".news-article",
+    history: false,
+    hideNav: ".pagination"
+  })
+</script>
+</html>
