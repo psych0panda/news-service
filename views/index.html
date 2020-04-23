@@ -4,59 +4,73 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>News App Demo</title>
+  <title>gator</title>
   <link rel="stylesheet" href="/assets/style.css">
-  <script src="https://unpkg.com/infinite-scroll@3/dist/infinite-scroll.pkgd.min.js"></script>
+  <!-- Video.js -->
+  <link href="https://vjs.zencdn.net/7.7.5/video-js.css" rel="stylesheet" />
+  <!-- Infinity Scroll js -->
+  <script src="https://unpkg.com/infinite-scroll@3/dist/infinite-scroll.pkgd.js"></script>
 </head>
 <body>
-  <h1>News App Demo</h1>
-</body>
 <main>
   <header>
-    <a class="logo" href="/">News Demo</a>
-    <form action="/search" method="GET">
-      <input autofocus class="search-input" value="{{.SearchKey}}"
-      placeholder="Enter a news topic" type="search" name="q">
-    </form>
-    <a href="https://github.com/freshman-tech/news" class="button
-      github-button">View on Github</a>
+    <div id="navbar">
+    <a class="logo" href="/"><img src="/assets/gater-logo.jpg" align="right" alt="logo.png"></a>
+    </div>
   </header>
 </main>
 <section class="container">
-  <div class="result-count">
-    {{ if (gt .Results.TotalResults 0)}}
-      <p>About <strong>{{ .Results.TotalResults }}</strong> results were found.</p>
-    {{ else if (ne .SearchKey "") and (eq .Results.TotalResults 0) }}
-      <p>No results found for your query: <strong>{{ .SearchKey }}</strong>.</p>
-    {{ end }}
-  </div>
   <ul class="search-results">
-    {{ range .Results.Articles }}
+    {{ range .Items }}
       <li class="news-article">
         <div>
           <a target="_blank" rel="noreferrer noopener" href="{{.URL}}">
             <h3 class="title">{{.Title }}</h3>
           </a>
-          <p class="description">{{ .Description }}</p>
+          {{ if eq .Type "Photo"}}
+             <img class="article-image" src="{{ .UrlsResource.Image700.URL }}" alt="urlToImage">
+          {{ else }}
+          <video id="article-animate" controls preload="auto" class="video-js" width="640" height="264" poster={{ .UrlsResource.Image700.URL }}>
+            <source src="{{.UrlsResource.Image460Sv.Vp8URL}}" type="video/mp4" />
+            <source src="{{.UrlsResource.Image460Sv.Av1URL}}" type="video/webm" />
+            <p class="vjs-no-js">
+              To view this video please enable JavaScript, and consider upgrading to a
+              web browser that
+              <a href="https://videojs.com/html5-video-support/" target="_blank">supports HTML5 video</a>
+            </p>
+          </video>
+          {{end}}
           <div class="metadata">
-            <p class="source">{{ .Source.Name }}</p>
-            <time class="published-date">{{ .FormatPublishDate }}</time>
+            <p class="source">UpVote {{ .UpVote }}</p>
+            <p class="source">DownVote {{ .DownVote }}</p>
+            <p class="source">Type {{ .Type }}</p>
+            <time class="published-date">Date create{{ .CreationTs }}</time>
           </div>
         </div>
-        <img class="article-image" src="{{ .URLToImage }}">
       </li>
     {{ end }}
   </ul>
+  <script>src="https://vjs.zencdn.net/7.7.5/video.js"</script>
 </section>
 <div class="pagination">
-  {{ if (gt .NextPage 2) }}
-    <a class="pagination__next" href="/search?q={{ .SearchKey }}&page={{ .PreviousPage }}">Previous</a>
-  {{ end }}
-  {{ if (ne .IsLastPage true) }}
-    <a class="pagination__next" href="/search?q={{ .SearchKey }}&page={{ .NextPage }}">Next</a>
-  {{ end }}
+    <a id="count" class="pagination__next" href="/?page={{ 1 }}">Next</a>
 </div>
 <script>
+  var prevScrollpos = window.pageYOffset;
+  window.onscroll = function() {
+    var currentScrollPos = window.pageYOffset;
+    if (prevScrollpos > currentScrollPos) {
+      document.getElementById("navbar").style.top = "0";
+    } else {
+      document.getElementById("navbar").style.top = "-150px";
+    }
+    prevScrollpos = currentScrollPos;
+  }
+
+  let myPlayer = videojs('article-animate');
+  let nextPage = document.getElementById("count");
+  nextPage.setAttribute('href', "/?page={{ 2 }}");
+
   let infScroll = new InfiniteScroll(".container", {
     path: ".pagination__next",
     append: ".news-article",
@@ -64,4 +78,5 @@
     hideNav: ".pagination"
   })
 </script>
+</body>
 </html>

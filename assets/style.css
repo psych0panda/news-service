@@ -9,7 +9,7 @@ html {
 }
 
 :root {
-  --light-green: #00ff00;
+  --light-green: #79bc79;
   --dark-green: #003b00;
   --dark-grey: #777;
   --light-grey: #dadce0;
@@ -19,79 +19,73 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
 }
 
-a {
-  text-decoration: none;
-  color: #333;
-}
+/* Style the header with a grey background and some padding */
+/*.header {*/
+/*  overflow: hidden;*/
+/*  background-color: #f1f1f1;*/
+/*  padding: 20px 10px;*/
+/*}*/
 
-a:hover {
-  text-decoration: underline;
-}
+/*!* Style the header links *!*/
+/*.header a {*/
+/*  float: left;*/
+/*  color: black;*/
+/*  text-align: center;*/
+/*  padding: 12px;*/
+/*  text-decoration: none;*/
+/*  font-size: 18px;*/
+/*  line-height: 25px;*/
+/*  border-radius: 4px;*/
+/*}*/
 
-a.button {
-  border: 2px solid #004400;
-  color: var(--dark-green);
-  border-radius: 4px;
-  padding: 6px 24px;
-  font-size: 14px;
-  font-weight: 400;
-}
+/*!* Style the logo link (notice that we set the same value of line-height and font-size to prevent the header to increase when the font gets bigger *!*/
+/*.header a.logo {*/
+/*  font-size: 25px;*/
+/*  font-weight: bold;*/
+/*}*/
 
-a.button:hover {
-  text-decoration: none;
-  background-color: var(--dark-green);
-  color: var(--light-green);
-}
+/*!* Change the background color on mouse-over *!*/
+/*.header a:hover {*/
+/*  background-color: #ddd;*/
+/*  color: black;*/
+/*}*/
 
-header {
-  width: 100%;
-  height: 50px;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  background-color: var(--light-green);
-  padding: 5px 10px;
-  align-items: center;
-}
+/*!* Style the active/current link*!*/
+/*.header a.active {*/
+/*  background-color: dodgerblue;*/
+/*  color: white;*/
+/*}*/
 
-.logo {
-  color: #002200;
-}
+/*!* Float the link section to the right *!*/
+/*.header-right {*/
+/*  float: right;*/
+/*}*/
 
-form {
-  height: calc(100% - 10px);
-}
-
-.search-input {
-  width: 500px;
-  height: 100%;
-  border-radius: 4px;
-  border-color: transparent;
-  background-color: var(--dark-green);
-  color: var(--light-green);
-  font-size: 16px;
-  line-height: 1.4;
-  padding-left: 5px;
+/* Add media queries for responsiveness - when the screen is 500px wide or less, stack the links on top of each other */
+@media screen and (max-width: 500px) {
+  .header a {
+    float: none;
+    display: block;
+    text-align: left;
+  }
+  .header-right {
+    float: none;
+  }
 }
 
 .container {
   width: 100%;
   max-width: 720px;
   margin: 0 auto;
-  padding: 80px 20px 40px;
+  padding: 146px 20px 40px;
 }
 
-.result-count {
-  color: var(--dark-grey);
-  text-align: center;
-  margin-bottom: 15px;
-}
-
-.search-results {
-  list-style: none;
+.logo {
+  margin-left: auto;
+  margin-right: auto;
+  display: inline-block;
+  margin-bottom: 10px;
+  width: 50%;
 }
 
 .news-article {
@@ -105,10 +99,17 @@ form {
 }
 
 .article-image {
-  width: 200px;
-  flex-grow: 0;
-  flex-shrink: 0;
-  margin-left: 20px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
+
+.article-animate {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
 }
 
 .title {
@@ -139,35 +140,25 @@ form {
   margin-right: 20px;
 }
 
-@media screen and (max-width: 550px) {
-  header {
-    flex-direction: column;
-    height: auto;
-    padding-bottom: 10px;
-  }
+#navbar {
+  background-color: #ffffff; /* Black background color */
+  position: fixed; /* Make it stick/fixed */
+  top: 0; /* Stay on top */
+  width: 100%; /* Full width */
+  transition: top 0.3s; /* Transition effect when sliding down (and up) */
+}
 
-  .logo {
-    display: inline-block;
-    margin-bottom: 10px;
-  }
+/* Style the navbar links */
+#navbar a {
+  float: left;
+  display: block;
+  color: white;
+  text-align: center;
+  padding: 15px;
+  text-decoration: none;
+}
 
-  form, .search-input {
-    width: 100%;
-  }
-
-  .github-button {
-    display: none;
-  }
-
-  .title {
-    font-size: 18px;
-  }
-
-  .description {
-    font-size: 14px;
-  }
-
-  .article-image {
-    display: none;
-  }
+#navbar a:hover {
+  background-color: #ddd;
+  color: black;
 }

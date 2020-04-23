@@ -2,149 +2,213 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
+	"github.com/mattn/go-colorable"
+	logger "github.com/sirupsen/logrus"
 	"html/template"
-	"log"
-	"math"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"time"
-	"github.com/joho/godotenv"
 )
 
-type Source struct {
-	ID   interface{} `json:"id"`
-	Name string      `json:"name"`
-}
-
-type Article struct {
-	Source      Source    `json:"source"`
-	Author      string    `json:"author"`
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	URL         string    `json:"url"`
-	URLToImage  string    `json:"urlToImage"`
-	PublishedAt time.Time `json:"publishedAt"`
-	Content     string    `json:"content"`
-}
-
-type Results struct {
-	Status       string    `json:"status"`
-	TotalResults int       `json:"totalResults"`
-	Articles     []Article `json:"articles"`
-}
-
-type Search struct {
-	SearchKey  string
-	NextPage   int
-	TotalPages int
-	Results    Results
-}
-
-type NewsAPIError struct {
+type NineGagEntity struct {
 	Status string `json:"status"`
-	Code string `json:"code"`
-	Message string `json:"message"`
+	Items  []struct {
+		SrcAlias     string `json:"src_alias,omitempty"`
+		ID           string `json:"id,omitempty"`
+		URL          string `json:"url,omitempty"`
+		Title        string `json:"title,omitempty"`
+		Type         string `json:"type,omitempty"`
+		CreationTs   int    `json:"creationTs,omitempty"`
+		UpVote       int    `json:"upVote,omitempty"`
+		DownVote     int    `json:"downVote,omitempty"`
+		UrlsResource struct {
+			Image700 struct {
+				Width  int    `json:"width"`
+				Height int    `json:"height"`
+				URL    string `json:"url"`
+			} `json:"image700"`
+			Image460 struct {
+				Width   int    `json:"width"`
+				Height  int    `json:"height"`
+				URL     string `json:"url"`
+				WebpURL string `json:"webpUrl"`
+			} `json:"image460"`
+			ImageFbThumbnail struct {
+				Width  int    `json:"width"`
+				Height int    `json:"height"`
+				URL    string `json:"url"`
+			} `json:"imageFbThumbnail"`
+			Image460Sv struct {
+				Width    int    `json:"width"`
+				Height   int    `json:"height"`
+				URL      string `json:"url"`
+				HasAudio int    `json:"hasAudio"`
+				Duration int    `json:"duration"`
+				Vp8URL   string `json:"vp8Url"`
+				H265URL  string `json:"h265Url"`
+				Av1URL   string `json:"av1Url"`
+			} `json:"image460sv"`
+		} `json:"urls_resource,omitempty"`
+		Raw struct {
+			ID               string `json:"id"`
+			URL              string `json:"url"`
+			Title            string `json:"title"`
+			Description      string `json:"description"`
+			Type             string `json:"type"`
+			Nsfw             int    `json:"nsfw"`
+			UpVoteCount      int    `json:"upVoteCount"`
+			DownVoteCount    int    `json:"downVoteCount"`
+			CreationTs       int    `json:"creationTs"`
+			Promoted         int    `json:"promoted"`
+			IsVoteMasked     int    `json:"isVoteMasked"`
+			HasLongPostCover int    `json:"hasLongPostCover"`
+			Images           struct {
+				Image700 struct {
+					Width  int    `json:"width"`
+					Height int    `json:"height"`
+					URL    string `json:"url"`
+				} `json:"image700"`
+				Image460 struct {
+					Width   int    `json:"width"`
+					Height  int    `json:"height"`
+					URL     string `json:"url"`
+					WebpURL string `json:"webpUrl"`
+				} `json:"image460"`
+				ImageFbThumbnail struct {
+					Width  int    `json:"width"`
+					Height int    `json:"height"`
+					URL    string `json:"url"`
+				} `json:"imageFbThumbnail"`
+				Image460Sv struct {
+					Width    int    `json:"width"`
+					Height   int    `json:"height"`
+					URL      string `json:"url"`
+					HasAudio int    `json:"hasAudio"`
+					Duration int    `json:"duration"`
+					Vp8URL   string `json:"vp8Url"`
+					H265URL  string `json:"h265Url"`
+					Av1URL   string `json:"av1Url"`
+				} `json:"image460sv"`
+			} `json:"images"`
+			SourceDomain  string `json:"sourceDomain"`
+			SourceURL     string `json:"sourceUrl"`
+			CommentsCount int    `json:"commentsCount"`
+			PostSection   struct {
+				Name     string `json:"name"`
+				URL      string `json:"url"`
+				ImageURL string `json:"imageUrl"`
+				WebpURL  string `json:"webpUrl"`
+			} `json:"postSection"`
+			Tags []interface{} `json:"tags"`
+		} `json:"raw,omitempty"`
+	} `json:"items"`
+	ItemsDropped []interface{} `json:"items_dropped"`
+	Stats        struct {
+		DownloaderRequestBytes           int    `json:"downloader/request_bytes"`
+		DownloaderRequestCount           int    `json:"downloader/request_count"`
+		DownloaderRequestMethodCountGET  int    `json:"downloader/request_method_count/GET"`
+		DownloaderResponseBytes          int    `json:"downloader/response_bytes"`
+		DownloaderResponseCount          int    `json:"downloader/response_count"`
+		DownloaderResponseStatusCount200 int    `json:"downloader/response_status_count/200"`
+		DupefilterFiltered               int    `json:"dupefilter/filtered"`
+		FinishReason                     string `json:"finish_reason"`
+		FinishTime                       string `json:"finish_time"`
+		ItemScrapedCount                 int    `json:"item_scraped_count"`
+		LogCountDEBUG                    int    `json:"log_count/DEBUG"`
+		LogCountINFO                     int    `json:"log_count/INFO"`
+		MemusageMax                      int    `json:"memusage/max"`
+		MemusageStartup                  int    `json:"memusage/startup"`
+		RequestDepthMax                  int    `json:"request_depth_max"`
+		ResponseReceivedCount            int    `json:"response_received_count"`
+		SchedulerDequeued                int    `json:"scheduler/dequeued"`
+		SchedulerDequeuedMemory          int    `json:"scheduler/dequeued/memory"`
+		SchedulerEnqueued                int    `json:"scheduler/enqueued"`
+		SchedulerEnqueuedMemory          int    `json:"scheduler/enqueued/memory"`
+		StartTime                        string `json:"start_time"`
+	} `json:"stats"`
+	SpiderName string `json:"spider_name"`
 }
 
 var tmpl = template.Must(template.ParseFiles("views/index.html"))
-var apiKey *string
+var startUrl = "https://agile-river-75797.herokuapp.com/crawl.json?spider_name=ninegag&start_requests=true"
+var capacityPage = 0
 
-func (a *Article) FormatPublishDate() string {
-	year, month, day := a.PublishedAt.Date()
-	return fmt.Sprintf("%v %d, %d", month, day, year)
+func (s *NineGagEntity) FormatPublishDate() string {
+	date := time.Unix(int64(s.Items[0].CreationTs), 0)
+	return date.Format(time.UnixDate)
 }
 
-func (s *Search) IsLastPage() bool {
-	return s.NextPage >= s.TotalPages
+func (s *NineGagEntity) BuildCursor() string {
+	cursor := fmt.Sprintf("%v%%2C%v%%2C%v&c=%d", s.Items[len(s.Items)-1].ID, s.Items[len(s.Items)-2].ID, s.Items[len(s.Items)-3].ID, capacityPage+40)
+	capacityPage += 40
+	return cursor
 }
 
-func (s *Search) CurrentPage() int {
-	if s.NextPage == 1 {
-		return s.NextPage
-	}
-	return s.NextPage - 1
+func (s *NineGagEntity) NextPage() string {
+	suffix := fmt.Sprintf("&url=https://9gag.com/v1/group-posts/group/default/type/hot?after=%s", s.BuildCursor())
+	nextPage := startUrl + suffix
+	return nextPage
 }
 
-func (s *Search) PreviousPage() int {
-	return s.CurrentPage() - 1
-}
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+	nineGagStruct := &NineGagEntity{}
 
-func errHandler(err error, w http.ResponseWriter) {
+	u, err := url.Parse(r.URL.String())
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		logger.Error(err)
+		return
+	}
+
+	params := u.Query()
+	page := params.Get("page")
+	if page != "" {
+		startUrl = nineGagStruct.NextPage()
+	} else {
+		page = "1"
+	}
+
+	//resp, err := http.Get(startUrl)
+	file, err := ioutil.ReadFile("response.json")
+	if err != nil {
+		logger.Error(err)
+		return
+	}
+	_ = json.Unmarshal([]byte(file), nineGagStruct)
+
+	//defer resp.Body.Close()
+	//if resp.StatusCode != 200 {
+	//	logger.Error("Exception in response: ", http.StatusInternalServerError)
+	//	return
+	//}
+
+	//err = json.NewDecoder(resp.Body).Decode(&nineGagStruct.Items)
+	//if err != nil {
+	//	logger.Error("Exception in json decode: ", err)
+	//	return
+	//}
+
+	err = tmpl.Execute(w, nineGagStruct)
+	if err != nil {
+		logger.Error(err)
 		return
 	}
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	err := tmpl.Execute(w, nil)
-	errHandler(err, w)
-}
-
-func searchHandler(w http.ResponseWriter, r *http.Request) {
-	u, err := url.Parse(r.URL.String())
-	errHandler(err, w)
-
-	params := u.Query()
-	searchKey := params.Get("q")
-	page := params.Get("page")
-	if page == "" {
-		page = "1"
-	}
-	search := &Search{}
-	search.SearchKey = searchKey
-	next, err := strconv.Atoi(page)
-	errHandler(err, w)
-
-	search.NextPage = next
-	pageSize := 20
-
-	endpoint := fmt.Sprintf("https://newsapi.org/v2/everything?q=%s&pageSize=%d&page=%d&apiKey=%s&sortBy=publishedAt&language=en", url.QueryEscape(search.SearchKey), pageSize, search.NextPage, *apiKey)
-	resp, err := http.Get(endpoint)
-	errHandler(err, w)
-
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		newsError := &NewsAPIError{}
-		err := json.NewDecoder(resp.Body).Decode(newsError)
-		if err != nil {
-			http.Error(w, "Unexpected server error", http.StatusInternalServerError)
-			return
-		}
-		http.Error(w, newsError.Message, http.StatusInternalServerError)
-	}
-	err = json.NewDecoder(resp.Body).Decode(&search.Results)
-	errHandler(err, w)
-
-	search.TotalPages = int(math.Ceil(float64(search.Results.TotalResults / pageSize)))
-	if ok := !search.IsLastPage(); ok {
-		search.NextPage++
-	}
-	err = tmpl.Execute(w, search)
-	errHandler(err, w)
-}
-
 func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Print("No .env file found")
-	}
+	logger.SetFormatter(&logger.TextFormatter{ForceColors: true})
+	logger.SetOutput(colorable.NewColorableStdout())
+	logger.SetReportCaller(true)
+	logger.SetLevel(logger.DebugLevel)
 }
 
 func main() {
-	newsApiToken, _ := os.LookupEnv("NEWS_API_TOKEN")
-	apiKey = flag.String("apiKey", newsApiToken, "Newsapi.org access key")
-	flag.Parse()
-
-	if *apiKey == "" {
-		log.Fatal("apiKey must be set")
-	}
+	logger.Println("entry point...")
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "3000"
+		port = "27010"
 	}
 	mux := http.NewServeMux()
 
@@ -152,10 +216,9 @@ func main() {
 
 	mux.Handle("/assets/", http.StripPrefix("/assets/", fs))
 	mux.HandleFunc("/", indexHandler)
-	mux.HandleFunc("/search", searchHandler)
 
 	err := http.ListenAndServe(":"+port, mux)
 	if err != nil {
-		log.Fatal("Server listening error...")
+		logger.Fatal(err)
 	}
 }
