@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="ie=edge">
   <title>gator</title>
+  <!-- favicon -->
+  <link rel="icon" type="image/png" href="/assets/favicon.ico" />
+  <!-- Static -->
   <link rel="stylesheet" href="/assets/style.css">
   <!-- Video.js -->
   <link href="https://vjs.zencdn.net/7.7.5/video-js.css" rel="stylesheet" />
@@ -53,12 +56,13 @@
   <script>src="https://vjs.zencdn.net/7.7.5/video.js"</script>
 </section>
 <div class="pagination">
-    <a id="count" class="pagination__next" href="/?page={{ 1 }}">Next</a>
+    <a id="count" class="pagination__next" href="/feed/?page=2">Next</a>
 </div>
 <script>
-  var prevScrollpos = window.pageYOffset;
+{{/*  Hide navbar */}}
+  let prevScrollpos = window.pageYOffset;
   window.onscroll = function() {
-    var currentScrollPos = window.pageYOffset;
+    let currentScrollPos = window.pageYOffset;
     if (prevScrollpos > currentScrollPos) {
       document.getElementById("navbar").style.top = "0";
     } else {
@@ -66,10 +70,11 @@
     }
     prevScrollpos = currentScrollPos;
   }
-
+{{/*  Setup videojs */}}
   let myPlayer = videojs('article-animate');
+{{/*  Infinity scroll */}}
   let nextPage = document.getElementById("count");
-  nextPage.setAttribute('href', "/?page={{ 2 }}");
+  nextPage.setAttribute('href', "/feed/?page=2");
 
   let infScroll = new InfiniteScroll(".container", {
     path: ".pagination__next",
